@@ -60,6 +60,10 @@ $profitService->return();
 $profitService->returnQuery();
 ```
 
+## 官方文档
+
+- https://pay.weixin.qq.com/wiki/doc/api/allocation.php?chapter=26_1
+
 ## 捐赠
 
 ![reward](reward.png)

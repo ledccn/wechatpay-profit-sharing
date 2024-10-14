@@ -5,6 +5,7 @@ namespace Ledc\WechatPayProfitSharing;
 /**
  * 微信支付普通直连分账
  * @link https://pay.weixin.qq.com/wiki/doc/api/allocation.php?chapter=26_1
+ * @description 实现分账只是在普通支付下单接口中新增了一个分账参数profit_sharing，其他与普通支付方式完全相同。目前支持付款码支付、JSAPI支付、Native支付、APP支付、小程序支付、H5支付、委托代扣、车主平台。
  */
 class ProfitService
 {
@@ -195,9 +196,9 @@ class ProfitService
      * @param array $params
      * @param array $options
      * @param bool $serial 请求需要双向证书
-     * @return array|HttpResponse
+     * @return HttpResponse
      */
-    public function request(string $method, string $url, array $params, array $options = [], bool $serial = false): array
+    public function request(string $method, string $url, array $params, array $options = [], bool $serial = false): HttpResponse
     {
         $params['sign'] = Utils::generateSign($params, $this->getConfig()->v2_secret_key);
         $body = XML::build($params);
@@ -218,7 +219,7 @@ class ProfitService
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_HEADER, 0);
         curl_setopt($curl, CURLOPT_HTTPHEADER, $options['headers']);
-        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_URL, $this->getConfig()->getBaseUri() . $url);
         curl_setopt($curl, CURLOPT_POST, 1);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);

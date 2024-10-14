@@ -11,16 +11,19 @@ class Utils
      * 签名
      * @param array $attributes
      * @param string $key
-     * @param string $encryptMethod
      * @return string
      */
-    public static function generateSign(array $attributes, string $key, string $encryptMethod = 'md5'): string
+    public static function generateSign(array $attributes, string $key): string
     {
-        // 集合M内非空参数值的参数按照参数名ASCII码从小到大排序（字典序）
         ksort($attributes);
-
+        
         $attributes['key'] = $key;
 
-        return strtoupper(call_user_func_array($encryptMethod, [urldecode(http_build_query($attributes))]));
+        if (!empty($attributes['sign_type']) && $attributes['sign_type'] === 'HMAC-SHA256') {
+            $signType = fn(string $message): string => hash_hmac('sha256', $message, $attributes['key']);
+        } else {
+            $signType = 'md5';
+        }
+        return strtoupper(call_user_func_array($signType, [urldecode(http_build_query($attributes))]));
     }
 }

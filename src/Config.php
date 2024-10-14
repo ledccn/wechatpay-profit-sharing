@@ -13,6 +13,7 @@ use LogicException;
  * @property string $secret_key 商户API v3密钥
  * @property string $certificate 商户的微信支付证书，文件名 apiclient_cert.pem
  * @property string $private_key 商户的微信支付证书密钥，文件名 apiclient_key.pem
+ * @property string $base_uri 微信支付接口地址uri
  */
 class Config extends ConfigContract
 {
@@ -35,5 +36,14 @@ class Config extends ConfigContract
         }
 
         return strtoupper($info['serialNumberHex']);
+    }
+
+    /**
+     * 【获取】微信支付接口地址uri
+     * @return string
+     */
+    public function getBaseUri(): string
+    {
+        return rtrim($this->base_uri ?: 'https://api.mch.weixin.qq.com/', '/') . '/';
     }
 }
