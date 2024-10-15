@@ -26,6 +26,7 @@ class Helper
 
     /**
      * 创建实例（微信支付普通直连分账）
+     * - CRMEB单商户 版本号：CRMEB-BZ v5.4.0(20240708)
      * @return ProfitService
      */
     public static function api(): ProfitService

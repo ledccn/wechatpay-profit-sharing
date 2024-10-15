@@ -3,6 +3,7 @@
 namespace Ledc\WechatPayProfitSharing;
 
 use JsonSerializable;
+use Ledc\WechatPayProfitSharing\Exceptions\HttpException;
 
 /**
  * HTTP响应
@@ -55,6 +56,35 @@ class HttpResponse implements JsonSerializable
     }
 
     /**
+     * 请求结果转数组
+     * @return array
+     * @throws HttpException
+     */
+    public function toArray(): array
+    {
+        if ($this->isFailed()) {
+            throw new HttpException();
+        }
+
+        if (empty($this->getResponse()) || false === is_string($this->getResponse())) {
+            throw new HttpException('响应为空');
+        }
+
+        $result = XML::parse($this->response);
+        $return_code = $result["return_code"] ?? null;
+        $result_code = $result["result_code"] ?? null;
+        if ('SUCCESS' !== $return_code || 'SUCCESS' !== $result_code) {
+            $err_code = $result["err_code"] ?? '';
+            $err_code_des = $result["err_code_des"] ?? '';
+            throw new HttpException('[' . $err_code . '] ' . $err_code_des);
+        }
+
+        // TODO... 验签
+
+        return $result;
+    }
+
+    /**
      * 获取响应的HTTP状态码
      * @return int
      */
@@ -104,25 +134,28 @@ class HttpResponse implements JsonSerializable
     /**
      * 转数组
      * @return array
+     * @throws HttpException
      */
     public function jsonSerialize(): array
     {
-        return get_object_vars($this);
+        return $this->toArray();
     }
 
     /**
      * 转JSON
      * @param int $options
      * @return string
+     * @throws HttpException
      */
     public function toJson(int $options = 0): string
     {
-        return json_encode($this->jsonSerialize(), $options);
+        return json_encode($this->toArray(), $options);
     }
 
     /**
      * 转为字符串
      * @return string
+     * @throws HttpException
      */
     public function __toString(): string
     {

@@ -219,7 +219,7 @@ class ProfitService
             $timestamp . "\n" .
             $nonceStr . "\n" .
             $body . "\n";
-        openssl_sign($message, $raw_sign, $this->getConfig()->private_key, 'sha256WithRSAEncryption');
+        openssl_sign($message, $raw_sign, $this->getConfig()->getPrivateKey(), 'sha256WithRSAEncryption');
         $sign = base64_encode($raw_sign);
         $schema = 'WECHATPAY2-SHA256-RSA2048 ';
         $token = sprintf(

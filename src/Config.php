@@ -24,12 +24,38 @@ class Config extends ConfigContract
     protected array $requiredKeys = ['mch_id', 'appid', 'v2_secret_key', 'secret_key', 'certificate', 'private_key'];
 
     /**
+     * 【获取】商户的微信支付证书密钥
+     * - openssl_pkey_get_private
+     * @return string
+     */
+    public function getPrivateKey(): string
+    {
+        if (!is_file($this->private_key)) {
+            throw new LogicException("商户的微信支付证书密钥不存在");
+        }
+        return trim(file_get_contents($this->private_key));
+    }
+
+    /**
+     * 【获取】商户的微信支付证书
+     * - openssl_pkey_get_public
+     * @return string
+     */
+    public function getPublicKey(): string
+    {
+        if (!is_file($this->certificate)) {
+            throw new LogicException('商户的微信支付证书不存在');
+        }
+        return trim(file_get_contents($this->certificate));
+    }
+
+    /**
      * 获取序列号：商户的微信支付证书
      * @throws LogicException
      */
     public function getSerialNo(): string
     {
-        $info = openssl_x509_parse($this->certificate);
+        $info = openssl_x509_parse(file_get_contents($this->certificate));
 
         if ($info === false || !isset($info['serialNumberHex'])) {
             throw new LogicException('Read the $certificate failed, please check it whether or nor correct');
