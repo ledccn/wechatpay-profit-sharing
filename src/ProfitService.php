@@ -32,11 +32,7 @@ class ProfitService
      */
     public function addReceiver(array $params): HttpResponse
     {
-        $params['mch_id'] = $this->getConfig()->mch_id;
         $params['appid'] = $this->getConfig()->appid;
-        $params['nonce_str'] = uniqid();
-        $params['sign_type'] = 'HMAC-SHA256';
-        $params = array_filter($params);
         return $this->request('POST', 'pay/profitsharingaddreceiver', $params);
     }
 
@@ -48,11 +44,7 @@ class ProfitService
      */
     public function removeReceiver(array $params): HttpResponse
     {
-        $params['mch_id'] = $this->getConfig()->mch_id;
         $params['appid'] = $this->getConfig()->appid;
-        $params['nonce_str'] = uniqid();
-        $params['sign_type'] = 'HMAC-SHA256';
-        $params = array_filter($params);
         return $this->request('POST', 'pay/profitsharingremovereceiver', $params);
     }
 
@@ -64,11 +56,7 @@ class ProfitService
      */
     public function single(array $params): HttpResponse
     {
-        $params['mch_id'] = $this->getConfig()->mch_id;
         $params['appid'] = $this->getConfig()->appid;
-        $params['nonce_str'] = uniqid();
-        $params['sign_type'] = 'HMAC-SHA256';
-        $params = array_filter($params);
         return $this->request('POST', 'secapi/pay/profitsharing', $params, [], true);
     }
 
@@ -81,11 +69,7 @@ class ProfitService
      */
     public function multi(array $params): HttpResponse
     {
-        $params['mch_id'] = $this->getConfig()->mch_id;
         $params['appid'] = $this->getConfig()->appid;
-        $params['nonce_str'] = uniqid();
-        $params['sign_type'] = 'HMAC-SHA256';
-        $params = array_filter($params);
         return $this->request('POST', 'secapi/pay/multiprofitsharing', $params, [], true);
     }
 
@@ -98,11 +82,6 @@ class ProfitService
      */
     public function query(array $params): HttpResponse
     {
-        $params['mch_id'] = $this->getConfig()->mch_id;
-        //$params['appid'] = $this->getConfig()->appid;
-        $params['nonce_str'] = uniqid();
-        $params['sign_type'] = 'HMAC-SHA256';
-        $params = array_filter($params);
         return $this->request('POST', 'pay/profitsharingquery', $params);
     }
 
@@ -116,11 +95,7 @@ class ProfitService
      */
     public function finish(array $params): HttpResponse
     {
-        $params['mch_id'] = $this->getConfig()->mch_id;
         $params['appid'] = $this->getConfig()->appid;
-        $params['nonce_str'] = uniqid();
-        $params['sign_type'] = 'HMAC-SHA256';
-        $params = array_filter($params);
         return $this->request('POST', 'pay/profitsharingfinish', $params, [], true);
     }
 
@@ -133,11 +108,6 @@ class ProfitService
      */
     public function orderAmountQuery(array $params): HttpResponse
     {
-        $params['mch_id'] = $this->getConfig()->mch_id;
-        //$params['appid'] = $this->getConfig()->appid;
-        $params['nonce_str'] = uniqid();
-        $params['sign_type'] = 'HMAC-SHA256';
-        $params = array_filter($params);
         return $this->request('POST', 'pay/profitsharingorderamountquery', $params);
     }
 
@@ -154,11 +124,7 @@ class ProfitService
      */
     public function return(array $params): HttpResponse
     {
-        $params['mch_id'] = $this->getConfig()->mch_id;
         $params['appid'] = $this->getConfig()->appid;
-        $params['nonce_str'] = uniqid();
-        $params['sign_type'] = 'HMAC-SHA256';
-        $params = array_filter($params);
         return $this->request('POST', 'secapi/pay/profitsharingreturn', $params, [], true);
     }
 
@@ -172,11 +138,7 @@ class ProfitService
      */
     public function returnQuery(array $params): HttpResponse
     {
-        $params['mch_id'] = $this->getConfig()->mch_id;
         $params['appid'] = $this->getConfig()->appid;
-        $params['nonce_str'] = uniqid();
-        $params['sign_type'] = 'HMAC-SHA256';
-        $params = array_filter($params);
         return $this->request('POST', 'pay/profitsharingreturnquery', $params);
     }
 
@@ -200,6 +162,11 @@ class ProfitService
      */
     public function request(string $method, string $url, array $params, array $options = [], bool $serial = false): HttpResponse
     {
+        $params['mch_id'] = $this->getConfig()->mch_id;
+        $params['nonce_str'] = uniqid();
+        $params['sign_type'] = 'HMAC-SHA256';
+        $params = array_filter($params);
+
         $params['sign'] = Utils::generateSign($params, $this->getConfig()->v2_secret_key);
         $body = XML::build($params);
 

@@ -16,7 +16,7 @@ class Utils
     public static function generateSign(array $attributes, string $key): string
     {
         ksort($attributes);
-        
+
         $attributes['key'] = $key;
 
         if (!empty($attributes['sign_type']) && $attributes['sign_type'] === 'HMAC-SHA256') {
