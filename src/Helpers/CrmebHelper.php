@@ -89,7 +89,9 @@ class CrmebHelper
         $api = Helper::api();
         $params = Utils::builderProfitSharing($data, $transaction_id, $out_order_no);
 
+        //var_dump('请求单次分账（请求需要双向证书）【请求入参】', $params);
         $response = $api->single($params);
+        //var_dump('请求单次分账（请求需要双向证书）【响应】', $response);
 
         return $response->toArray();
     }

@@ -2,6 +2,7 @@
 
 namespace Ledc\WechatPayProfitSharing;
 
+use InvalidArgumentException;
 use Ledc\WechatPayProfitSharing\Contracts\Receiver;
 use Ledc\WechatPayProfitSharing\Contracts\ReceiverTypeEnums;
 use Ledc\WechatPayProfitSharing\Contracts\RelationTypeEnums;
@@ -12,7 +13,7 @@ use Ledc\WechatPayProfitSharing\Contracts\RelationTypeEnums;
 class Utils
 {
     /**
-     * V2 签名
+     * V2：签名
      * @param array $attributes
      * @param string $key
      * @return string
@@ -32,16 +33,48 @@ class Utils
     }
 
     /**
-     * V3 签名
+     * V3：私钥签名请求数据报文（使用商户的微信支付证书密钥）
      * @param string $message
      * @param Config $config
      * @return string
      */
     public static function createSignature(string $message, Config $config): string
     {
-        openssl_sign($message, $signature, openssl_pkey_get_private($config->getPrivateKey()), 'sha256WithRSAEncryption');
+        if (!openssl_sign($message, $signature, openssl_pkey_get_private($config->getPrivateKey()), 'sha256WithRSAEncryption')) {
+            throw new InvalidArgumentException(openssl_error_string() ?: 'openssl_sign error.');
+        }
 
         return base64_encode($signature);
+    }
+
+    /**
+     * V3：请求头附加验证信息
+     * @param Config $config
+     * @param string $url
+     * @param string $method
+     * @param string $body
+     * @return string
+     */
+    public static function createAuthorizationSignature(Config $config, string $url, string $method, string $body = ''): string
+    {
+        $nonceStr = uniqid();
+        $timestamp = time();
+        $message = $method . "\n" .
+            '/' . ltrim($url, '/') . "\n" .
+            $timestamp . "\n" .
+            $nonceStr . "\n" .
+            $body . "\n";
+        $sign = Utils::createSignature($message, $config);
+        $schema = 'WECHATPAY2-SHA256-RSA2048 ';
+        $token = sprintf(
+            'mchid="%s",nonce_str="%s",timestamp="%d",serial_no="%s",signature="%s"',
+            $config->mch_id,
+            $nonceStr,
+            $timestamp,
+            $config->getSerialNo(),
+            $sign
+        );
+        return $schema . $token;
     }
 
     /**

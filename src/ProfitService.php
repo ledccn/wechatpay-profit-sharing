@@ -157,10 +157,10 @@ class ProfitService
      * @param string $url
      * @param array $params
      * @param array $options
-     * @param bool $serial 请求需要双向证书
+     * @param bool $requiredCert 请求需要双向证书
      * @return HttpResponse
      */
-    public function request(string $method, string $url, array $params, array $options = [], bool $serial = false): HttpResponse
+    public function request(string $method, string $url, array $params, array $options = [], bool $requiredCert = false): HttpResponse
     {
         $params['mch_id'] = $this->getConfig()->mch_id;
         $params['nonce_str'] = uniqid();
@@ -177,19 +177,18 @@ class ProfitService
             ];
         }
 
-        if ($serial) {
-            $options['headers'][] = 'Authorization: ' . $this->createAuthorizationSignature($url, $method, $body);
-            $options['headers'][] = 'Wechatpay-Serial: ' . $this->getConfig()->getSerialNo();
-        }
-
         // 请求之前回调
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_HEADER, 0);
         curl_setopt($curl, CURLOPT_HTTPHEADER, $options['headers']);
         curl_setopt($curl, CURLOPT_URL, $this->getConfig()->getBaseUri() . $url);
         curl_setopt($curl, CURLOPT_POST, 1);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        //curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        //curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        if ($requiredCert) {
+            curl_setopt($curl, CURLOPT_SSLCERT, $this->getConfig()->certificate);
+            curl_setopt($curl, CURLOPT_SSLKEY, $this->getConfig()->private_key);
+        }
         curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl, CURLOPT_TIMEOUT, 30);
@@ -202,34 +201,5 @@ class ProfitService
         curl_close($curl);
 
         return $response;
-    }
-
-    /**
-     * @param string $url
-     * @param string $method
-     * @param string $body
-     * @return string
-     */
-    protected function createAuthorizationSignature(string $url, string $method, string $body = ''): string
-    {
-        $nonceStr = uniqid();
-        $timestamp = time();
-        $message = $method . "\n" .
-            '/' . ltrim($url, '/') . "\n" .
-            $timestamp . "\n" .
-            $nonceStr . "\n" .
-            $body . "\n";
-        openssl_sign($message, $raw_sign, $this->getConfig()->getPrivateKey(), 'sha256WithRSAEncryption');
-        $sign = base64_encode($raw_sign);
-        $schema = 'WECHATPAY2-SHA256-RSA2048 ';
-        $token = sprintf(
-            'mchid="%s",nonce_str="%s",timestamp="%d",serial_no="%s",signature="%s"',
-            $this->getConfig()->mch_id,
-            $nonceStr,
-            $timestamp,
-            $this->getConfig()->getSerialNo(),
-            $sign
-        );
-        return $schema . $token;
     }
 }
