@@ -55,7 +55,7 @@ class Config extends ConfigContract
      */
     public function getSerialNo(): string
     {
-        $info = openssl_x509_parse(file_get_contents($this->certificate));
+        $info = openssl_x509_parse($this->getPublicKey());
 
         if ($info === false || !isset($info['serialNumberHex'])) {
             throw new LogicException('Read the $certificate failed, please check it whether or nor correct');
