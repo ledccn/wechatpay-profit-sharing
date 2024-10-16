@@ -2,7 +2,6 @@
 
 namespace Ledc\WechatPayProfitSharing;
 
-use InvalidArgumentException;
 use think\App;
 
 /**
@@ -21,7 +20,7 @@ class Helper
      */
     public static function isProfitSharing(): bool
     {
-        return sys_config(self::WECHAT_PAY_PROFIT_SHARING, false);
+        return sys_config(self::WECHAT_PAY_PROFIT_SHARING, false) || getenv(strtoupper(self::WECHAT_PAY_PROFIT_SHARING));
     }
 
     /**
@@ -31,32 +30,32 @@ class Helper
      */
     public static function api(): ProfitService
     {
-        if (!sys_config('pay_weixin_open', false)) {
-            throw new InvalidArgumentException('微信支付未开启：pay_weixin_open');
-        }
-
         /** @var App $app */
         $app = app();
         if ($app->exists(ProfitService::class)) {
             return $app->make(ProfitService::class);
         }
 
-        $payment = [
-            'mch_id' => sys_config('pay_weixin_mchid'),
-            'appid' => sys_config('routine_appId') ?: sys_config('wechat_app_appid'),
-            'v2_secret_key' => sys_config('pay_weixin_key'),
-            'secret_key' => sys_config('pay_weixin_key_v3'),
-            'certificate' => substr(public_path(parse_url(sys_config('pay_weixin_client_cert'))['path']), 0, strlen(public_path(parse_url(sys_config('pay_weixin_client_cert'))['path'])) - 1),
-            'private_key' => substr(public_path(parse_url(sys_config('pay_weixin_client_key'))['path']), 0, strlen(public_path(parse_url(sys_config('pay_weixin_client_key'))['path'])) - 1),
-            'serial_no' => sys_config('pay_weixin_serial_no'),
-        ];
+        // 是否注入配置
+        if ($app->exists(Config::class)) {
+            $config = $app->make(Config::class);
+        } else {
+            $payment = [
+                'mch_id' => sys_config('pay_weixin_mchid'),
+                'appid' => sys_config('routine_appId') ?: sys_config('wechat_app_appid'),
+                'v2_secret_key' => sys_config('pay_weixin_key'),
+                'secret_key' => sys_config('pay_weixin_key_v3'),
+                'certificate' => substr(public_path(parse_url(sys_config('pay_weixin_client_cert'))['path']), 0, strlen(public_path(parse_url(sys_config('pay_weixin_client_cert'))['path'])) - 1),
+                'private_key' => substr(public_path(parse_url(sys_config('pay_weixin_client_key'))['path']), 0, strlen(public_path(parse_url(sys_config('pay_weixin_client_key'))['path'])) - 1),
+                'serial_no' => sys_config('pay_weixin_serial_no'),
+            ];
+            // 实例化，绑定到容器
+            $config = new Config($payment);
+            $app->instance(Config::class, $config);
+        }
 
-        // 实例化
-        $config = new Config($payment);
+        // 实例化，绑定到容器
         $service = new ProfitService($config);
-
-        // 绑定类实例到容器
-        $app->instance(Config::class, $config);
         $app->instance(ProfitService::class, $service);
 
         return $service;

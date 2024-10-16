@@ -2,10 +2,10 @@
 
 namespace Ledc\WechatPayProfitSharing;
 
-use InvalidArgumentException;
 use Ledc\WechatPayProfitSharing\Contracts\Receiver;
 use Ledc\WechatPayProfitSharing\Contracts\ReceiverTypeEnums;
 use Ledc\WechatPayProfitSharing\Contracts\RelationTypeEnums;
+use Ledc\WechatPayProfitSharing\Exceptions\InvalidArgumentException;
 
 /**
  * 工具类
@@ -37,6 +37,7 @@ class Utils
      * @param string $message
      * @param Config $config
      * @return string
+     * @throws InvalidArgumentException
      */
     public static function createSignature(string $message, Config $config): string
     {
@@ -54,6 +55,7 @@ class Utils
      * @param string $method
      * @param string $body
      * @return string
+     * @throws InvalidArgumentException
      */
     public static function createAuthorizationSignature(Config $config, string $url, string $method, string $body = ''): string
     {
