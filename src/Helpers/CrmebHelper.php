@@ -59,6 +59,7 @@ class CrmebHelper
         $query = StoreOrder::where('paid', '=',1)
             ->where('pay_time', '>=', time() - $three_days_ago)
             ->where('refund_status', '=', 0)
+            ->where('wechat_pay_profit_sharing_finish', '=', 0)
             ->where('pay_type', '=', 'weixin');
         $query->chunk(100, function ($orders) {
             /** @var StoreOrder $order */
