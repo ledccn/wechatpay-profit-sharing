@@ -2,6 +2,7 @@
 
 namespace Ledc\WechatPayProfitSharing\Helpers;
 
+use app\dao\user\UserBrokerageDao;
 use app\model\order\StoreOrder;
 use app\model\user\User;
 use app\model\user\UserExtract;
@@ -56,11 +57,14 @@ class CrmebHelper
     public static function scheduler(): void
     {
         $three_days_ago = 86400 * 2;
-        $query = StoreOrder::where('paid', '=',1)
+        $query = StoreOrder::where('paid', '=', 1)
             ->where('pay_time', '>=', time() - $three_days_ago)
+            ->where('pay_type', '=', 'weixin')
             ->where('refund_status', '=', 0)
-            ->where('wechat_pay_profit_sharing_finish', '=', 0)
-            ->where('pay_type', '=', 'weixin');
+            // 订单状态（-1 : 申请退款 -2 : 退货成功 0：待发货；1：待收货；2：已收货；3：待评价；-1：已退款）
+            ->whereIn('status', [2, 3])
+            ->where('wechat_pay_profit_sharing_finish', '=', 0);
+
         $query->chunk(100, function ($orders) {
             /** @var StoreOrder $order */
             foreach ($orders as $order) {
@@ -89,6 +93,9 @@ class CrmebHelper
 
             $list = static::getExecuteList($storeOrder);
             if (empty($list)) {
+                $storeOrder->wechat_pay_profit_sharing_finish = 1;
+                $storeOrder->save();
+
                 // 完结分账（请求需要双向证书）
                 Helper::finish($storeOrder->trade_no, $storeOrder->order_id, '该订单无需分账（无分账接收方），已完成');
             } else {
@@ -157,6 +164,9 @@ class CrmebHelper
                     }
 
                     if (empty($receivers)) {
+                        $storeOrder->wechat_pay_profit_sharing_finish = 1;
+                        $storeOrder->save();
+
                         // 完结分账（请求需要双向证书）
                         Helper::finish($trade_no, $order_id, '该订单无需分账（手动提现），已完成');
                     } else {
@@ -168,7 +178,7 @@ class CrmebHelper
                 });
             }
         } catch (Throwable $throwable) {
-            Log::error($throwable->getMessage());
+            Log::error("【微信自动分账 订单主键：{$id}】" . $throwable->getMessage());
             throw new ErrorException($throwable->getMessage(), $throwable->getCode());
         }
     }
@@ -184,23 +194,23 @@ class CrmebHelper
         /** @var StoreOrder $storeOrder */
         $storeOrder = StoreOrder::findOrEmpty($id);
         if ($storeOrder->isEmpty()) {
-            throw new InvalidArgumentException('订单不存在');
+            throw new AutoProfitSharingException('订单不存在');
         }
         if ($storeOrder->wechat_pay_profit_sharing_finish) {
-            throw new InvalidArgumentException('当前订单已完结分账');
+            throw new AutoProfitSharingException('当前订单分账已完结');
         }
 
         if ($storeOrder->refund_status) {
-            throw new InvalidArgumentException('当前订单正在申请退款或已退款，不支持分账');
+            throw new AutoProfitSharingException('当前订单正在申请退款或已退款，不支持分账');
         }
 
         $trade_no = $storeOrder->trade_no;
         if (empty($trade_no)) {
-            throw new InvalidArgumentException('微信支付订单号为空，无法分账');
+            throw new AutoProfitSharingException('微信支付订单号为空，无法分账');
         }
 
         if (empty($storeOrder->paid && $storeOrder->pay_time)) {
-            throw new InvalidArgumentException('订单未支付，无法分账');
+            throw new AutoProfitSharingException('订单未支付，无法分账');
         }
 
         // 检查开关：0=>线下手动转账；1=>自动到微信零钱
@@ -248,11 +258,11 @@ class CrmebHelper
                 throw new AutoProfitSharingException('用户未找到');
             }
 
-            /** @var UserBrokerageServices $services */
-            $services = app()->make(UserBrokerageServices::class);
+            /** @var UserBrokerageDao $dao */
+            $dao = app()->make(UserBrokerageDao::class);
 
             // 获取某个账户下的冻结佣金
-            $broken_commission = max($services->getUserFrozenPrice($uid), 0);
+            $broken_commission = max($dao->getUserFrozenPrice($uid), 0);
             // 用户佣金总额
             $brokerage_price = $user->brokerage_price;
             if ($brokerage_price <= 0) {

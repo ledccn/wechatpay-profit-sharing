@@ -145,7 +145,7 @@ class Helper
     public static function finish(string $transaction_id, string $out_order_no, string $description): array
     {
         $response = Helper::api()->finish(['transaction_id' => $transaction_id, 'out_order_no' => $out_order_no, 'description' => $description]);
-
+        var_dump($response);
         return $response->toArray();
     }
 
