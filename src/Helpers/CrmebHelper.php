@@ -10,7 +10,6 @@ use app\services\user\UserBrokerageServices;
 use app\services\user\UserServices;
 use app\services\wechat\WechatUserServices;
 use ErrorException;
-use InvalidArgumentException;
 use Ledc\WechatPayProfitSharing\Contracts\Receiver;
 use Ledc\WechatPayProfitSharing\Contracts\ReceiverTypeEnums;
 use Ledc\WechatPayProfitSharing\Exceptions\AutoProfitSharingException;
@@ -25,6 +24,8 @@ use Throwable;
  * CRMEB单商户
  * - 版本号：CRMEB-BZ v5.4.0(20240708)
  * - 使用步骤：订单表eb_store_order新增wechat_pay_profit_sharing_finish字段（默认值1，避免处理以往订单）；然后，把默认值改为0；
+ * - 配置项新增wechat_pay_profit_sharing，启用普通直连分账 的开关
+ * - 支付时传入参数：profit_sharing=Y
  */
 class CrmebHelper
 {
