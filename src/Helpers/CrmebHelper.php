@@ -59,7 +59,7 @@ class CrmebHelper
     {
         $three_days_ago = 86400 * 2;
         $query = StoreOrder::where('paid', '=', 1)
-            ->where('pay_time', '>=', time() - $three_days_ago)
+            ->where('pay_time', '<=', time() - $three_days_ago)
             ->where('pay_type', '=', 'weixin')
             ->where('refund_status', '=', 0)
             // 订单状态（-1 : 申请退款 -2 : 退货成功 0：待发货；1：待收货；2：已收货；3：待评价；-1：已退款）
@@ -102,7 +102,7 @@ class CrmebHelper
             } else {
                 // 查询订单待分账金额
                 $_rs = Helper::orderAmountQuery($storeOrder->trade_no);
-                var_dump('查询订单待分账金额【响应】', $_rs);
+                //var_dump('查询订单待分账金额【响应】', $_rs);
 
                 $site_name = sys_config('site_name');
                 $user_phone = substr_replace($storeOrder->user_phone, '****', 3, 4);
