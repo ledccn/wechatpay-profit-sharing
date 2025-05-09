@@ -57,6 +57,10 @@ class CrmebHelper
      */
     public static function scheduler(): void
     {
+        if (!Helper::isProfitSharing()) {
+            return;
+        }
+
         $three_days_ago = 86400 * 2;
         $query = StoreOrder::where('paid', '=', 1)
             ->where('pay_time', '<=', time() - $three_days_ago)
@@ -102,7 +106,7 @@ class CrmebHelper
             } else {
                 // 查询订单待分账金额
                 $_rs = Helper::orderAmountQuery($storeOrder->trade_no);
-                //var_dump('查询订单待分账金额【响应】', $_rs);
+                var_dump('查询订单待分账金额【响应】', $_rs);
 
                 $site_name = sys_config('site_name');
                 $user_phone = substr_replace($storeOrder->user_phone, '****', 3, 4);
@@ -282,29 +286,5 @@ class CrmebHelper
         }
 
         return null;
-    }
-
-    /**
-     * 添加分账接收方
-     * @param int $user_id
-     * @return array
-     * @throws HttpException|DataNotFoundException
-     */
-    public static function addReceiver(int $user_id): array
-    {
-        $openid = self::getUserOpenid($user_id);
-        return Helper::addReceiver($openid);
-    }
-
-    /**
-     * 删除分账接收方
-     * @param int $user_id
-     * @return array
-     * @throws HttpException|DataNotFoundException
-     */
-    public static function removeReceiver(int $user_id): array
-    {
-        $openid = self::getUserOpenid($user_id);
-        return Helper::removeReceiver($openid);
     }
 }

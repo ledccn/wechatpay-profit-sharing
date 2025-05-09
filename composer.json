@@ -23,5 +23,12 @@
         "psr-4": {
             "Ledc\\WechatPayProfitSharing\\": "src/"
         }
+    },
+    "extra": {
+        "think": {
+            "services": [
+                "Ledc\\WechatPayProfitSharing\\Service"
+            ]
+        }
     }
 }

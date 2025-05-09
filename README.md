@@ -6,6 +6,10 @@
 
 ## 使用说明
 
+1. 安装完之后，请执行以下命令，安装插件的数据库迁移文件 `php think install:migrate:wechatpay-profit-sharing`
+
+2. 执行数据库迁移 `php think migrate:run`
+
 开箱即用，只需要传入一个配置，初始化一个实例即可：
 
 ```php
