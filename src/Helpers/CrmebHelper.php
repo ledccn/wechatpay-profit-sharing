@@ -13,8 +13,6 @@ use ErrorException;
 use Ledc\WechatPayProfitSharing\Contracts\Receiver;
 use Ledc\WechatPayProfitSharing\Contracts\ReceiverTypeEnums;
 use Ledc\WechatPayProfitSharing\Exceptions\AutoProfitSharingException;
-use Ledc\WechatPayProfitSharing\Exceptions\HttpException;
-use Ledc\WechatPayProfitSharing\Utils;
 use think\db\exception\DataNotFoundException;
 use think\facade\Db;
 use think\facade\Log;
@@ -156,9 +154,8 @@ class CrmebHelper
                         $openid = CrmebHelper::getUserOpenid($uid);
 
                         // 添加分账接收方
-                        $response = Helper::api()->addReceiver(Utils::packReceiver($openid));
-                        $response->toArray();
-                        //var_dump($_result);
+                        $response = Helper::addReceiver($openid);
+                        var_dump($response);
 
                         $receivers[] = new Receiver([
                             'type' => ReceiverTypeEnums::PERSONAL_OPENID,
@@ -173,7 +170,7 @@ class CrmebHelper
                         $storeOrder->save();
 
                         // 完结分账（请求需要双向证书）
-                        Helper::finish($trade_no, $order_id, '该订单无需分账（手动提现），已完成');
+                        Helper::finish($trade_no, $order_id, '该订单无需分账');
                     } else {
                         $result = Helper::singleSharing($receivers, $trade_no, $storeOrder->order_id);
                         var_dump($result);
@@ -271,7 +268,7 @@ class CrmebHelper
             // 用户佣金总额
             $brokerage_price = $user->brokerage_price;
             if ($brokerage_price <= 0) {
-                throw new AutoProfitSharingException('用户的用户佣金总额为空。');
+                throw new AutoProfitSharingException('用户佣金总额为空。');
             }
 
             // 可提现佣金
